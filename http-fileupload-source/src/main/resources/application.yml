@@ -1,0 +1,32 @@
+
+spring:
+  application.name: http-fileupload-source
+  cloud:
+    function:
+      definition: supply;transform|trim;log
+    stream:
+      kafka:
+        binder:
+          brokers: 192.168.1.48:9092
+      #          configuration:
+      #            value.deserializer: com.thinateh.stream.scslogging.PersonDeserializer
+      bindings:
+        supply-out-0:
+          destination: input
+        #        transformtrim-in-0:
+        #          destination: input
+        #          group: transformer
+        #          consumer:
+        #            properties:
+        #              value.deserializer: com.thinateh.stream.scslogging.PersonDeserializer
+        #        transformtrim-out-0:
+        #          destination: output
+        log-in-0:
+          group: log
+          destination: input,output
+      function:
+        bindings:
+          transform|trim-in-0: input
+          transform|trim-out-0: output
+
+
