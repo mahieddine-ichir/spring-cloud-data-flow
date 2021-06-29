@@ -11,7 +11,7 @@ import org.springframework.integration.dsl.MessageChannels
 import org.springframework.integration.transformer.GenericTransformer
 import org.springframework.messaging.MessageChannel
 import org.springframework.messaging.MessageHandler
-import org.springframework.messaging.support.GenericMessage
+import org.springframework.messaging.support.MessageBuilder
 
 @SpringBootApplication
 @EnableIntegration
@@ -73,5 +73,7 @@ fun main(args: Array<String>) {
     val channel = context.getBean("numChannel", MessageChannel::class.java)
 
     (1..100)
-            .forEach { channel.send(GenericMessage<String>(it.toString())) }
+            .map { it.toString() }
+            .map { MessageBuilder.withPayload(it).build() }
+            .forEach { channel.send(it) }
 }
