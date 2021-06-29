@@ -8,10 +8,12 @@ import org.springframework.integration.core.GenericSelector
 import org.springframework.integration.dsl.IntegrationFlow
 import org.springframework.integration.dsl.IntegrationFlows
 import org.springframework.integration.dsl.MessageChannels
+import org.springframework.integration.kafka.dsl.Kafka
 import org.springframework.integration.transformer.GenericTransformer
+import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.messaging.MessageChannel
-import org.springframework.messaging.MessageHandler
 import org.springframework.messaging.support.MessageBuilder
+import java.util.function.Function
 
 @SpringBootApplication
 @EnableIntegration
@@ -26,7 +28,7 @@ class FileUploadApplication {
     }
 
     @Bean
-    fun flow1(): IntegrationFlow {
+    fun flow1(kafkaTemplate: KafkaTemplate<String, Int>): IntegrationFlow {
         return IntegrationFlows.from("numChannel")
                 .filter(GenericSelector<String> {
                     try {
@@ -40,9 +42,10 @@ class FileUploadApplication {
                     println(">>>> transforming $it")
                     it.toInt()
                 })
-                .handle(MessageHandler {
-                    println(">>>>> $it")
-                })
+                .handle(Kafka.outboundChannelAdapter(kafkaTemplate)
+                        .messageKey<String> { it.headers["id"].toString() }
+                        .topic("flow-output")
+                )
                 .get()
     }
 
