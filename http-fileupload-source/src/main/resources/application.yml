@@ -2,8 +2,8 @@
 spring:
   application.name: http-fileupload-source
   cloud:
-    function:
-      definition: supply;transform|trim;log
+#    function:
+#      definition: supply;transform|trim;log
     stream:
       kafka:
         binder:
