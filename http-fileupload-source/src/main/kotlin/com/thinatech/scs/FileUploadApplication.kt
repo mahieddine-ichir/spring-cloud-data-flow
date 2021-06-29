@@ -1,24 +1,19 @@
 package com.thinatech.scs
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import org.springframework.context.ApplicationContext
-import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
+import org.springframework.core.convert.converter.Converter
 import org.springframework.integration.channel.DirectChannel
 import org.springframework.integration.config.EnableIntegration
+import org.springframework.integration.config.IntegrationConverter
 import org.springframework.messaging.MessageChannel
-import org.springframework.messaging.MessageHandler
 import org.springframework.messaging.support.GenericMessage
-import javax.annotation.PostConstruct
+import java.util.function.Function
 
 @SpringBootApplication
 @EnableIntegration
 class FileUploadApplication {
-
-    @Autowired
-    lateinit var applicationContext: ApplicationContext
 
     @Bean
     fun numChannel(): MessageChannel {
@@ -30,11 +25,10 @@ class FileUploadApplication {
         return directChannel
     }
 
-    @PostConstruct
-    fun init() {
-        println(">>>>> sending message ... of type Int")
-        val channel = applicationContext.getBean("numChannel", MessageChannel::class.java)
-        channel.send(GenericMessage<Int>(2))
+    @Bean
+    @IntegrationConverter
+    fun stringToIntConverter(): Converter<String, Number> {
+        return StringToIntConverter()
     }
 
     /*
@@ -58,5 +52,13 @@ class FileUploadApplication {
 }
 
 fun main(args: Array<String>) {
-    runApplication<FileUploadApplication>(*args)
+    val context = runApplication<FileUploadApplication>(*args)
+
+    println(">>>>> sending message ... of type Int")
+    val channel = context.getBean("numChannel", MessageChannel::class.java)
+    // sending Int
+    channel.send(GenericMessage<Int>(2))
+
+    // sending String
+    channel.send(GenericMessage<String>("3"))
 }
