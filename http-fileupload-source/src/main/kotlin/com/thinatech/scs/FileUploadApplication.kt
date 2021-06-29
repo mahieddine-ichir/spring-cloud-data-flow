@@ -3,13 +3,15 @@ package com.thinatech.scs
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
-import org.springframework.core.convert.converter.Converter
-import org.springframework.integration.channel.DirectChannel
 import org.springframework.integration.config.EnableIntegration
-import org.springframework.integration.config.IntegrationConverter
+import org.springframework.integration.core.GenericSelector
+import org.springframework.integration.dsl.IntegrationFlow
+import org.springframework.integration.dsl.IntegrationFlows
+import org.springframework.integration.dsl.MessageChannels
+import org.springframework.integration.transformer.GenericTransformer
 import org.springframework.messaging.MessageChannel
+import org.springframework.messaging.MessageHandler
 import org.springframework.messaging.support.GenericMessage
-import java.util.function.Function
 
 @SpringBootApplication
 @EnableIntegration
@@ -17,18 +19,31 @@ class FileUploadApplication {
 
     @Bean
     fun numChannel(): MessageChannel {
-        val directChannel = DirectChannel()
-        directChannel.setDatatypes(Number::class.java)
-        directChannel.subscribe {
-            println(">>>>> Received message payload: ${it.payload} - headers: ${it.headers}")
-        }
-        return directChannel
+        return MessageChannels.direct()
+                .datatype(String::class.java)
+                .interceptor(MyChannelInterceptor())
+                .get()
     }
 
     @Bean
-    @IntegrationConverter
-    fun stringToIntConverter(): Converter<String, Number> {
-        return StringToIntConverter()
+    fun flow1(): IntegrationFlow {
+        return IntegrationFlows.from("numChannel")
+                .filter(GenericSelector<String> {
+                    try {
+                        (it.toInt()) % 3 == 0
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        false
+                    }
+                })
+                .transform(GenericTransformer<String, Int> {
+                    println(">>>> transforming $it")
+                    it.toInt()
+                })
+                .handle(MessageHandler {
+                    println(">>>>> $it")
+                })
+                .get()
     }
 
     /*
@@ -56,9 +71,7 @@ fun main(args: Array<String>) {
 
     println(">>>>> sending message ... of type Int")
     val channel = context.getBean("numChannel", MessageChannel::class.java)
-    // sending Int
-    channel.send(GenericMessage<Int>(2))
 
-    // sending String
-    channel.send(GenericMessage<String>("3"))
+    (1..100)
+            .forEach { channel.send(GenericMessage<String>(it.toString())) }
 }
