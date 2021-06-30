@@ -1,16 +1,15 @@
 package com.thinatech.scs
 
-import org.springframework.integration.annotation.Transformer
 import org.springframework.integration.http.multipart.UploadedMultipartFile
 import org.springframework.util.LinkedMultiValueMap
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.util.function.Function
 
-class MultiPartReceiver(private val config: UploadConfig) {
+class MultiPartReceiver(private val config: UploadConfig): Function<LinkedMultiValueMap<String, Any>, Upload> {
 
-    @Transformer
-    fun receive(payload: LinkedMultiValueMap<String, Any>): Upload {
+    override fun apply(payload: LinkedMultiValueMap<String, Any>): Upload {
         val items = config.parts
                 .asSequence()
                 .filter { payload.keys.contains(it) }
@@ -27,6 +26,8 @@ class MultiPartReceiver(private val config: UploadConfig) {
                 }
                 .toList()
 
-        return Upload(items)
+        val upload = Upload(items)
+        println("generated upload data $upload")
+        return upload
     }
 }

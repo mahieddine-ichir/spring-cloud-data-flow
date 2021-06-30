@@ -3,16 +3,15 @@
 spring:
   application.name: http-fileupload-source
   cloud:
-#    function:
-#      definition: supply;transform|trim;log
     stream:
       kafka:
         binder:
-          #brokers: 192.168.1.48:9092
           brokers: localhost:9092
       #          configuration:
       #            value.deserializer: com.thinateh.stream.scslogging.PersonDeserializer
       bindings:
+        upload-output:
+          destination: output
         supply-out-0:
           destination: input
         #        transformtrim-in-0:
@@ -32,9 +31,9 @@ spring:
           transform|trim-out-0: output
   kafka:
     bootstrap-servers: ${spring.cloud.stream.kafka.binder.brokers}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: com.thinatech.scs.UploadSerializer
+    #producer:
+      #key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      #value-serializer: com.thinatech.scs.UploadSerializer
 
 upload:
   tmp-directory: /tmp/uploads
